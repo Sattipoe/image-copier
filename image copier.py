@@ -88,7 +88,7 @@ def run(generations=50, population_size=100, seed=31):
                  .mutate(mutate_function=mutate, rate=0.1)
                  .evaluate())
 
-    for i in range(50):
+    for i in range(1000):
         population = population.evolve(evolution)
         print("i =", i, " best =", population.current_best.fitness,
               " worst =", population.current_worst.fitness)
