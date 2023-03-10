@@ -53,11 +53,22 @@ def mutate(solution, rate):
         coords = [max(0, min(int(x), 200)) for x in coords]
         polygon[1:] = list(zip(coords[::2], coords[1::2]))
 
+    elif:
+        polygon = random.choice(solution)
+        colour = polygon[0]
+        R = [colour[0]+ random.randint(0,255)]
+        G = [colour[0]+ random.randint(0,255)]
+        B = [colour[0]+ random.randint(0,255)]
+        A = [colour[0]+ random.randint(0,255)]
+
+        polygon = R,G,B,A
+
+
+
+
     else:
-        # reorder polygons
-        new_solution = solution[:]
-        random.shuffle(new_solution)
-        solution = new_solution
+    ##reorder polygons
+        random.shuffle(solution)
     return solution
 
 
@@ -81,8 +92,8 @@ def run(generations=50, population_size=100, seed=31):
     random.seed(seed)
 
     # initialization
-    population = Population.generate(initialise, evaluate, size=10, maximize=True)
-    population.evaluate
+    population = Population.generate(initialise, evaluate, size=population_size, maximize=True)
+    population.evaluate()
     evolution = (Evolution().survive(fraction=0.5)
                  .breed(parent_picker=select, combiner=combine)
                  .mutate(mutate_function=mutate, rate=0.1)
@@ -92,6 +103,7 @@ def run(generations=50, population_size=100, seed=31):
         population = population.evolve(evolution)
         print("i =", i, " best =", population.current_best.fitness,
               " worst =", population.current_worst.fitness)
+        len(population.current_best.chromosome)
     draw(population[0].chromosome).save("solution.png")
 
 
