@@ -22,12 +22,12 @@ def make_polygon(SIDES):
     G = random.randint(0, 255)
     B = random.randint(0, 255)
     A = random.randint(30, 60)
-    x1 = random.randint(10, 189)
-    x2 = random.randint(10, 189)
-    x3 = random.randint(10, 189)
-    y1 = random.randint(10, 189)
-    y2 = random.randint(10, 189)
-    y3 = random.randint(10, 189)
+    x1 = random.randint(10, 190)
+    x2 = random.randint(10, 190)
+    x3 = random.randint(10, 190)
+    y1 = random.randint(10, 190)
+    y2 = random.randint(10, 190)
+    y3 = random.randint(10, 190)
     return [(R, G, B, A), (x1, y1), (x2, y2), (x3, y3)]
 
 
@@ -44,40 +44,61 @@ def evaluate(solution):
     return (MAX - count) / MAX
 
 
-def mutate(solution, rate):
-    if random.random() < 0.5:
-        # mutate points
+def mutate(solution, rate, add_rate=2, delete_rate=0.1, shift_rate=0.1, shuffle_rate=0.1):
+    r = random.random()
+    if r < add_rate:
+        # add a new polygon
+        solution.append(make_polygon(3))
+    elif r < add_rate + delete_rate and len(solution) > 1:
+        # delete a random polygon
+        del solution[random.randint(0, len(solution) - 1)]
+    elif r < add_rate + delete_rate + shift_rate:
+        #random points of the polygon
+        polygon = random.choice(solution)
+        for i in range(1, len(polygon)):
+            if random.random() < rate:
+                x, y = polygon[i]
+                x += random.randint(-10, 10)
+                y += random.randint(-10, 10)
+                x = max(10, min(x, 190))
+                y = max(10, min(y, 190))
+                polygon[i] = (x, y)
+    elif r < add_rate + delete_rate + shift_rate + shuffle_rate:
+        # shuffle the order of polygons
+        random.shuffle(solution)
+    elif r < add_rate + delete_rate + shift_rate + shuffle_rate + 0.25:
         polygon = random.choice(solution)
         coords = [x for point in polygon[1:] for x in point]
-        coords = [x +(random.randint(-10, 10) if random.random() < rate else 0) for x in coords]
+        coords = [x + (random.randint(-10, 10) if random.random() < rate else 0) for x in coords]
         coords = [max(0, min(int(x), 200)) for x in coords]
         polygon[1:] = list(zip(coords[::2], coords[1::2]))
-
-    elif:
-        polygon = random.choice(solution)
-        colour = polygon[0]
-        R = [colour[0]+ random.randint(0,255)]
-        G = [colour[0]+ random.randint(0,255)]
-        B = [colour[0]+ random.randint(0,255)]
-        A = [colour[0]+ random.randint(0,255)]
-
-        polygon = R,G,B,A
-
-
-
-
     else:
-    ##reorder polygons
-        random.shuffle(solution)
+        polygon = random.choice(solution)
+        R = max(0, min(polygon[0][0] + random.randint(-30, 30), 255))
+        G = max(0, min(polygon[0][1] + random.randint(-30, 30), 255))
+        B = max(0, min(polygon[0][2] + random.randint(-30, 30), 255))
+        A = max(0, min(polygon[0][3] + random.randint(-10, 10), 60))
+        polygon[0] = (R, G, B, A)
+
     return solution
 
-
 def select(population):
-  return [random.choice(population) for i in range(2)]
+    # tournament size of 5
+    tournament_size = 5
+
+    # select two parents based on their fitness values
+    parents = []
+    for i in range(2):
+        tournament = random.sample(population, tournament_size)
+        winner = max(tournament, key=lambda x: x.fitness)
+        parents.append(winner)
+
+    return parents
 
 
 def combine(*parents):
-  return [a if random.random() < 0.5 else b for a, b in zip(*parents)]
+    return [a if random.random() < 0.5 else b for a, b in zip(*parents)]
+
 
 # !/usr/bin/env python
 
@@ -87,7 +108,7 @@ def initialise():
     return [make_polygon(SIDES) for i in range(POLYGON_COUNT)]
 
 
-def run(generations=50, population_size=100, seed=31):
+def run(generations=500, population_size=100, seed=31):
     # for reproducibility
     random.seed(seed)
 
@@ -99,12 +120,18 @@ def run(generations=50, population_size=100, seed=31):
                  .mutate(mutate_function=mutate, rate=0.1)
                  .evaluate())
 
-    for i in range(1000):
+    best_solution = None
+    best_fitness = float("-inf")
+
+    for i in range(generations):
         population = population.evolve(evolution)
         print("i =", i, " best =", population.current_best.fitness,
               " worst =", population.current_worst.fitness)
-        len(population.current_best.chromosome)
-    draw(population[0].chromosome).save("solution.png")
+        if population.current_best.fitness > best_fitness:
+            best_solution = population.current_best
+            best_fitness = population.current_best.fitness
+
+    return best_solution
 
 
 def read_config(path):
