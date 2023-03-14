@@ -44,7 +44,7 @@ def evaluate(solution):
     return (MAX - count) / MAX
 
 
-def mutate(solution, rate, add_rate=2, delete_rate=0.1, shift_rate=0.1, shuffle_rate=0.1):
+def mutate(solution, rate, add_rate=1, delete_rate=0.1, shift_rate=0.1, shuffle_rate=0.1):
     r = random.random()
     if r < add_rate:
         # add a new polygon
