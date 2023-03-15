@@ -23,16 +23,19 @@ def make_polygon(SIDES):
     B = random.randint(0, 255)
     A = random.randint(30, 60)
     x1 = random.randint(10, 190)
-    x2 = random.randint(10, 190)
-    x3 = random.randint(10, 190)
     y1 = random.randint(10, 190)
-    y2 = random.randint(10, 190)
-    y3 = random.randint(10, 190)
-    return [(R, G, B, A), (x1, y1), (x2, y2), (x3, y3)]
+    side_length = random.randint(10, 40)
+    x2 = x1 + side_length
+    y2 = y1
+    x3 = x1 + side_length
+    y3 = y1 + side_length
+    x4 = x1
+    y4 = y1 + side_length
+    return [(R, G, B, A), (x1, y1), (x2, y2), (x3, y3), (x4, y4)]
 
 
 MAX = 255 * 200 * 200
-TARGET = Image.open("darwin.png")
+TARGET = Image.open("pic3.png")
 TARGET.load()  # read image and close the file
 
 
@@ -44,11 +47,11 @@ def evaluate(solution):
     return (MAX - count) / MAX
 
 
-def mutate(solution, rate,elite_rate=0.1, add_rate=0.2, delete_rate=0.2, shift_rate=0.4, shuffle_rate=0.1):
+def mutate(solution, rate, elite_rate=0.1, add_rate=0.2, delete_rate=0.2, shift_rate=0.4, shuffle_rate=0.1):
     r = random.random()
     if r < add_rate:
         # add a new polygon
-        solution.append(make_polygon(3))
+        solution.append(make_polygon(4))
     elif r < add_rate + delete_rate and len(solution) > 1:
         # delete a random polygon
         del solution[random.randint(0, len(solution) - 1)]
@@ -65,7 +68,7 @@ def mutate(solution, rate,elite_rate=0.1, add_rate=0.2, delete_rate=0.2, shift_r
                 polygon[i] = (x, y)
     elif r < add_rate + delete_rate + shift_rate + shuffle_rate:
         # shuffle the order of polygons
-        polygon[x], polygon[j] = polygon[j], polygon[i]
+        random.shuffle(solution)
     else:
         polygon = random.choice(solution)
         R = max(0, min(polygon[0][0] + random.randint(-30, 30), 255))
@@ -73,7 +76,6 @@ def mutate(solution, rate,elite_rate=0.1, add_rate=0.2, delete_rate=0.2, shift_r
         B = max(0, min(polygon[0][2] + random.randint(-30, 30), 255))
         A = max(0, min(polygon[0][3] + random.randint(-10, 10), 60))
         polygon[0] = (R, G, B, A)
-
 
     return solution
 
@@ -94,15 +96,15 @@ def initialise():
     return [make_polygon(SIDES) for i in range(POLYGON_COUNT)]
 
 
-def run(generations=500, population_size=100, seed=31):
+def run(generations=1000, population_size=100, seed=31):
     # for reproducibility
     random.seed(seed)
 
     # initialization
-    population = Population.generate(initialise, evaluate, size=population_size, maximize=True,)
+    population = Population.generate(initialise, evaluate, size=population_size, maximize=True, )
     population.evaluate()
     evolution = (Evolution().survive(n=1)
-                  .breed(parent_picker=select, combiner=combine)
+                 .breed(parent_picker=select, combiner=combine)
                  .mutate(mutate_function=mutate, rate=0.1, elite_rate=1)
                  .evaluate())
 
