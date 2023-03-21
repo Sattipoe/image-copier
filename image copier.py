@@ -5,6 +5,8 @@ import random
 import random
 from PIL import Image, ImageDraw, ImageChops
 from evol import Evolution, Population
+import multiprocessing
+import imageio
 
 
 def draw(solution):
@@ -35,11 +37,17 @@ def make_polygon(SIDES):
 
 
 MAX = 255 * 200 * 200
-TARGET = Image.open("pic3.png")
+TARGET = Image.open("pic1.png")
 TARGET.load()  # read image and close the file
 
 
+
+EVALUATION_COUNTER = 0
+
 def evaluate(solution):
+    global EVALUATION_COUNTER
+    EVALUATION_COUNTER += 1
+
     image = draw(solution)
     diff = ImageChops.difference(image, TARGET)
     hist = diff.convert("L").histogram()
@@ -88,7 +96,6 @@ def combine(*parents):
     return [a if random.random() < 0.5 else b for a, b in zip(*parents)]
 
 
-# !/usr/bin/env python
 
 def initialise():
     SIDES = 3
@@ -96,7 +103,7 @@ def initialise():
     return [make_polygon(SIDES) for i in range(POLYGON_COUNT)]
 
 
-def run(generations=1000, population_size=100, seed=31):
+def run(generations=1000, population_size=70, seed=35):
     # for reproducibility
     random.seed(seed)
 
@@ -110,6 +117,7 @@ def run(generations=1000, population_size=100, seed=31):
 
     best_solution = None
     best_fitness = float("-inf")
+    images = []  # create an empty list to store the images
 
     for i in range(generations):
         population = population.evolve(evolution)
@@ -118,7 +126,13 @@ def run(generations=1000, population_size=100, seed=31):
         if population.current_best.fitness > best_fitness:
             best_solution = population.current_best
             best_fitness = population.current_best.fitness
-            draw(population[0].chromosome).save("solution.png")
+            print("Total evaluations:", EVALUATION_COUNTER)
+            image = draw(population[0].chromosome)  # create an image
+            image.save("solution{}.png".format(i))  # save the image
+            images.append(image)  # add the image to the list
+
+    # create the gif from the images
+    imageio.mimsave('evolution.gif', images, fps=10)
 
     return best_solution
 
@@ -131,4 +145,4 @@ def read_config(path):
 if __name__ == "__main__":
     #  params = read_config(sys.argv[1])
     # run(**params)
-    run()
+        run()
